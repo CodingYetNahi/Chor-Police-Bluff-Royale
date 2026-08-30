@@ -34,18 +34,18 @@ export interface BotState {
 }
 
 export const BOT_NAMES = [
-  'BOT Cedar',
-  'BOT Orion',
-  'BOT Willow',
-  'BOT Jasper',
-  'BOT Raven',
-  'BOT Blaze',
-  'BOT Phoenix',
-  'BOT Sterling',
-  'BOT Frost',
-  'BOT Amber',
-  'BOT Echo',
-  'BOT Shadow'
+  'BOT Pushpa',
+  'BOT Vidya',
+  'BOT Savita',
+  'BOT Amol',
+  'BOT Ashish',
+  'BOT Datta',
+  'BOT Shekhar',
+  'BOT Appa',
+  'BOT Radha',
+  'BOT Rahul',
+  'BOT Priya',
+  'BOT Nikita'
 ];
 
 export function createBotState(
