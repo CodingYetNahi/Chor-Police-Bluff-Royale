@@ -1,0 +1,17 @@
+{
+  "short_name": "Chor Police",
+  "name": "Chor Police: Bluff Royale",
+  "description": "An original browser-based social-deduction game of deception, deduction, and tactical bluffing.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
+}

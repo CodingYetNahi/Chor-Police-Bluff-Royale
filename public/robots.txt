@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /how-to-play
+Allow: /privacy
+Allow: /terms
+Allow: /refunds
+Allow: /contact
+Allow: /credits
+
+Disallow: /room/
+Disallow: /match/
+Disallow: /admin/
+Disallow: /stats
+Disallow: /store/checkout
+
+Sitemap: https://example.com/sitemap.xml

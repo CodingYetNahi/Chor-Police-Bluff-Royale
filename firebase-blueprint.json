@@ -1,0 +1,143 @@
+{
+  "entities": {
+    "Player": {
+      "title": "Player",
+      "description": "Anonymous player profile and public stats",
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 16,
+          "description": "Safe display alias"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp created"
+        },
+        "matchesPlayed": {
+          "type": "number",
+          "description": "Total matches participated in"
+        },
+        "wins": {
+          "type": "number",
+          "description": "Total matches won"
+        }
+      },
+      "required": ["alias", "createdAt"]
+    },
+    "Room": {
+      "title": "Room",
+      "description": "Game match room containing 6 seats and public state",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{6}$",
+          "description": "6-character uppercase room join code"
+        },
+        "hostUid": {
+          "type": "string",
+          "description": "UID of room creator"
+        },
+        "isPrivate": {
+          "type": "boolean",
+          "description": "Whether room is private or quick match"
+        },
+        "policy": {
+          "type": "string",
+          "enum": ["HUMANS_ONLY", "FILL_WITH_BOTS", "OPEN_REMAINING_SEATS"],
+          "description": "Host player filling policy"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["LOBBY", "IN_GAME", "FINISHED", "EXPIRED"],
+          "description": "Room lifecycle status"
+        },
+        "currentPhase": {
+          "type": "string",
+          "enum": ["CASE_INTRO", "SECRET_ROLE", "EVIDENCE_REVIEW", "INVESTIGATION", "SPECIAL_ACTIONS", "FINAL_VOTING", "REVEAL", "REMATCH"],
+          "description": "Active game phase"
+        },
+        "phaseEndsAt": {
+          "type": "number",
+          "description": "Timestamp when current phase timer expires"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["code", "hostUid", "policy", "status", "currentPhase"]
+    },
+    "PrivatePlayerState": {
+      "title": "PrivatePlayerState",
+      "description": "Isolated confidential role and clue assigned strictly to a specific player UID",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["CHOR", "POLICE", "INFORMER", "PROTECTOR", "CITIZEN"],
+          "description": "Secret role"
+        },
+        "privateClue": {
+          "type": "string",
+          "description": "Private clue text"
+        },
+        "objective": {
+          "type": "string",
+          "description": "Private win objective"
+        }
+      },
+      "required": ["role", "privateClue"]
+    },
+    "Entitlement": {
+      "title": "Entitlement",
+      "description": "Verified host entitlement pass",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Player UID"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["FIRST_TRIAL_FREE", "TWO_HOUR_HOST_PASS"],
+          "description": "Entitlement type"
+        },
+        "expiresAt": {
+          "type": "number",
+          "description": "Expiration timestamp"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount in INR"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE", "EXPIRED", "REFUNDED"],
+          "description": "Entitlement status"
+        }
+      },
+      "required": ["userId", "type", "expiresAt", "status"]
+    }
+  },
+  "firestore": {
+    "/players/{playerId}": {
+      "schema": "Player",
+      "description": "Anonymous player profiles"
+    },
+    "/rooms/{roomId}": {
+      "schema": "Room",
+      "description": "Active game rooms"
+    },
+    "/rooms/{roomId}/privateState/{playerId}": {
+      "schema": "PrivatePlayerState",
+      "description": "Private role and clue state strictly readable by the specific seat owner"
+    },
+    "/entitlements/{entitlementId}": {
+      "schema": "Entitlement",
+      "description": "Verified server-written host entitlements"
+    }
+  }
+}

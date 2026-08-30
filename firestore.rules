@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all unknown collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // Player profiles
+    match /players/{playerId} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(playerId) &&
+        request.resource.data.keys().hasAll(['alias', 'createdAt']) &&
+        request.resource.data.alias is string &&
+        request.resource.data.alias.size() >= 3 &&
+        request.resource.data.alias.size() <= 16;
+      allow update: if isOwner(playerId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['alias', 'matchesPlayed', 'wins', 'updatedAt']) &&
+        request.resource.data.alias is string &&
+        request.resource.data.alias.size() >= 3 &&
+        request.resource.data.alias.size() <= 16;
+      allow delete: if false;
+    }
+
+    // Game Rooms
+    match /rooms/{roomId} {
+      allow read: if isSignedIn();
+      // Rooms are created and managed via server Cloud Functions
+      allow write: if isAdmin();
+
+      // Members subcollection
+      match /members/{memberId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+      }
+
+      // Private state subcollection: Strictly readable ONLY by the seat owner
+      match /privateState/{playerId} {
+        allow read: if isOwner(playerId);
+        allow write: if false; // Only Cloud Functions can assign roles/clues
+      }
+
+      // Actions subcollection: Players submit structured actions
+      match /actions/{actionId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() &&
+          request.resource.data.keys().hasAll(['actorUid', 'actionType', 'content', 'timestamp']) &&
+          request.resource.data.actorUid == request.auth.uid &&
+          request.resource.data.content is string &&
+          request.resource.data.content.size() <= 300;
+        allow update, delete: if false;
+      }
+
+      // Votes subcollection: One vote per player
+      match /votes/{playerId} {
+        allow read: if isAdmin(); // Votes remain secret until reveal phase
+        allow create: if isOwner(playerId) &&
+          request.resource.data.keys().hasAll(['targetSeatIndex', 'timestamp']) &&
+          request.resource.data.targetSeatIndex is int;
+        allow update, delete: if false;
+      }
+    }
+
+    // Cases collection: Publicly readable, writeable only by admins
+    match /cases/{caseId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Host Entitlements: Readable by owner, writeable strictly by server functions
+    match /entitlements/{entitlementId} {
+      allow read: if isOwner(resource.data.userId);
+      allow write: if false;
+    }
+
+    // Payment Logs: Server only
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Reports: Any signed-in user can submit a report
+    match /reports/{reportId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.reporterUid == request.auth.uid &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() <= 500;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // System Config: Public read, admin write
+    match /systemConfig/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@keyframes seal-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 20px 4px rgba(245, 158, 11, 0.2);
+  }
+}
+
+.animate-seal-pulse {
+  animation: seal-pulse 2.5s infinite;
+}
