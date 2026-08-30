@@ -3,27 +3,27 @@ import { Case } from '../types';
 export const SEED_CASES: Case[] = [
   {
     id: 'case-01-golden-samosa',
-    title: 'The Missing Golden Samosa Trophy',
-    intro: 'During the Annual College Food Fest, the coveted gilded Golden Samosa trophy disappeared from the glass display just before the awards ceremony.',
-    location: 'Campus Auditorium Hall',
+    title: 'Samosa Chori Ho Gaya',
+    intro: 'College Me Birthday Party ke bich me Samosa Chori ho gaya!?.',
+    location: 'Classroom',
     difficulty: 'Easy',
-    tags: ['Campus', 'Festival', 'Trophy'],
+    tags: ['Campus', 'Festival', 'Samosa'],
     contentSafetyStatus: 'APPROVED',
     enabled: true,
     publicEvidence: [
       {
         id: 'ev-1',
-        name: 'Empty Velvet Display Pedestal',
-        description: 'The glass case lock was picked cleanly with no shattered glass.',
+        name: 'Khali padi plate',
+        description: 'Samosa itna shiddat aur gadbadi me khaya ki Mirchi aur Saus bhi chhod gaya chor.',
         tag: 'Physical',
-        inspectedDetail: 'Micro-scratches indicate a brass hairpin tool was used at 4:15 PM.'
+        inspectedDetail: 'Baarikise Dekha gayaa tab pata chala ki Sauce ka ek packet utha le gaya hai.'
       },
       {
         id: 'ev-2',
-        name: 'Snack Stall Register Log',
-        description: 'Shows that three contestants left their tables around 4:10 PM.',
+        name: 'Mirchi ko touch bahi kiya',
+        description: 'Mirchi chhod ke gaya hai.',
         tag: 'Document',
-        inspectedDetail: 'Entry #42 signed with a blue fountain pen.'
+        inspectedDetail: 'Entry #42 Laal rang ka sauce hai.'
       },
       {
         id: 'ev-3',
