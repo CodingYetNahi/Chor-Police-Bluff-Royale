@@ -6,8 +6,7 @@ import { RoleBadge } from '../components/RoleBadge';
 export const Stats: React.FC = () => {
   const { stats, alias } = useAuth();
 
-  const winRate =
-    stats.matchesPlayed > 0 ? Math.round((stats.wins / stats.matchesPlayed) * 100) : 0;
+  const winRate = stats.matchesPlayed > 0 ? Math.round((stats.wins / stats.matchesPlayed) * 100) : 0;
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8 animate-fade-in">

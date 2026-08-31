@@ -40,7 +40,7 @@ class AnalyticsService {
         winningTeam: payload.winningTeam,
         durationSeconds: payload.durationSeconds,
         botCount: payload.botCount,
-        isHost: payload.isHost
+        isHost: payload.isHost,
       };
 
       // In production or development, log securely or send to privacy-compliant sink

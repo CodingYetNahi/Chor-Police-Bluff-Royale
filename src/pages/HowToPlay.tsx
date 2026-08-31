@@ -9,7 +9,8 @@ export const HowToPlay: React.FC = () => {
         <span className="text-xs uppercase font-mono text-amber-400">Rules & Strategy Guide</span>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-100">How to Play</h1>
         <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
-          Chor Police: Bluff Royale is an original 6-player social deduction game where evidence and contradictions unmask the thief.
+          Chor Police: Bluff Royale is an original 6-player social deduction game where evidence and
+          contradictions unmask the thief.
         </p>
       </div>
 
@@ -27,35 +28,40 @@ export const HowToPlay: React.FC = () => {
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
             <RoleBadge role="CHOR" size="md" />
             <p className="text-xs text-slate-300">
-              <strong className="text-red-400">Chor (The Thief):</strong> Knowingly holds the false alibi. Must blend in with plausible alibis, plant doubt, and avoid receiving the highest vote.
+              <strong className="text-red-400">Chor (The Thief):</strong> Knowingly holds the false alibi.
+              Must blend in with plausible alibis, plant doubt, and avoid receiving the highest vote.
             </p>
           </div>
 
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
             <RoleBadge role="POLICE" size="md" />
             <p className="text-xs text-slate-300">
-              <strong className="text-blue-400">Police (The Inspector):</strong> Holds official forensic verification and can inspect one physical evidence item to expose contradictions.
+              <strong className="text-blue-400">Police (The Inspector):</strong> Holds official forensic
+              verification and can inspect one physical evidence item to expose contradictions.
             </p>
           </div>
 
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
             <RoleBadge role="INFORMER" size="md" />
             <p className="text-xs text-slate-300">
-              <strong className="text-emerald-400">Informer (The Secret Eye):</strong> Holds confidential eyewitness testimony. Must guide citizens toward the Chor without being falsely suspected.
+              <strong className="text-emerald-400">Informer (The Secret Eye):</strong> Holds confidential
+              eyewitness testimony. Must guide citizens toward the Chor without being falsely suspected.
             </p>
           </div>
 
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
             <RoleBadge role="PROTECTOR" size="md" />
             <p className="text-xs text-slate-300">
-              <strong className="text-purple-400">Protector (The Guardian):</strong> Can shield one suspected innocent player from elimination. Has zero effect on the Chor.
+              <strong className="text-purple-400">Protector (The Guardian):</strong> Can shield one suspected
+              innocent player from elimination. Has zero effect on the Chor.
             </p>
           </div>
 
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2 md:col-span-2">
             <RoleBadge role="CITIZEN" size="md" />
             <p className="text-xs text-slate-300">
-              <strong className="text-teal-400">Citizens (2 Investigators):</strong> Ordinary citizens who compare witness statements against public physical evidence to identify the liar.
+              <strong className="text-teal-400">Citizens (2 Investigators):</strong> Ordinary citizens who
+              compare witness statements against public physical evidence to identify the liar.
             </p>
           </div>
         </div>
@@ -72,56 +78,64 @@ export const HowToPlay: React.FC = () => {
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 1</span>
             <div>
-              <strong className="text-slate-100">Case Briefing (12s):</strong> Read incident summary, location, stakes, and timeline.
+              <strong className="text-slate-100">Case Briefing (12s):</strong> Read incident summary,
+              location, stakes, and timeline.
             </div>
           </div>
 
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 2</span>
             <div>
-              <strong className="text-slate-100">Secret Role & Clue (15s):</strong> Privately view your assigned role and confidential clue.
+              <strong className="text-slate-100">Secret Role & Clue (15s):</strong> Privately view your
+              assigned role and confidential clue.
             </div>
           </div>
 
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 3</span>
             <div>
-              <strong className="text-slate-100">Evidence Review (30s):</strong> Inspect the 4 public evidence cards and timeline logs.
+              <strong className="text-slate-100">Evidence Review (30s):</strong> Inspect the 4 public evidence
+              cards and timeline logs.
             </div>
           </div>
 
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 4</span>
             <div>
-              <strong className="text-slate-100">Investigation (60s):</strong> Publish structured alibi statements, ask specific suspects targeted questions, or react with emojis.
+              <strong className="text-slate-100">Investigation (60s):</strong> Publish structured alibi
+              statements, ask specific suspects targeted questions, or react with emojis.
             </div>
           </div>
 
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 5</span>
             <div>
-              <strong className="text-slate-100">Special Powers (15s):</strong> Police inspect forensic details, Protector shields an innocent player, Chor plants doubt.
+              <strong className="text-slate-100">Special Powers (15s):</strong> Police inspect forensic
+              details, Protector shields an innocent player, Chor plants doubt.
             </div>
           </div>
 
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 6</span>
             <div>
-              <strong className="text-slate-100">Final Accusation (20s):</strong> Cast your final vote for the suspect you believe is the Chor.
+              <strong className="text-slate-100">Final Accusation (20s):</strong> Cast your final vote for the
+              suspect you believe is the Chor.
             </div>
           </div>
 
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 7</span>
             <div>
-              <strong className="text-slate-100">The Reveal (15s):</strong> The Chor is unmasked, match winner announced, and points distributed.
+              <strong className="text-slate-100">The Reveal (15s):</strong> The Chor is unmasked, match winner
+              announced, and points distributed.
             </div>
           </div>
 
           <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex gap-3">
             <span className="font-mono font-bold text-amber-400 flex-shrink-0">Phase 8</span>
             <div>
-              <strong className="text-slate-100">Rematch & Share:</strong> Share results with friends or start an immediate rematch with a new randomized case.
+              <strong className="text-slate-100">Rematch & Share:</strong> Share results with friends or start
+              an immediate rematch with a new randomized case.
             </div>
           </div>
         </div>

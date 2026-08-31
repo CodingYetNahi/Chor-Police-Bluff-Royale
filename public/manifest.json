@@ -6,7 +6,8 @@
     {
       "src": "/favicon.svg",
       "type": "image/svg+xml",
-      "sizes": "192x192 512x512"
+      "sizes": "any",
+      "purpose": "any"
     }
   ],
   "start_url": "/",

@@ -8,7 +8,7 @@ class SoundService {
     sfxEnabled: true,
     vibrationEnabled: true,
     reducedMotion: false,
-    alias: 'Silent Tiger'
+    alias: 'Silent Tiger',
   };
 
   constructor() {
@@ -44,7 +44,9 @@ class SoundService {
   private initAudio(): AudioContext | null {
     if (!this.settings.masterSound) return null;
     if (!this.audioCtx) {
-      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtxClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtxClass) {
         this.audioCtx = new AudioCtxClass();
       }

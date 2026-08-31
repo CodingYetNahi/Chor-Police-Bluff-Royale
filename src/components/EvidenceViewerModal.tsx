@@ -15,7 +15,7 @@ export const EvidenceViewerModal: React.FC<EvidenceViewerModalProps> = ({
   onClose,
   canInspect = false,
   onInspect,
-  inspectionResult
+  inspectionResult,
 }) => {
   if (!evidence) return null;
 

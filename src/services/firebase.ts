@@ -1,49 +1,35 @@
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, signInAnonymously } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import { connectAuthEmulator, getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore';
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
-let app: FirebaseApp | null = null;
-let authInstance: Auth | null = null;
-let firestoreInstance: Firestore | null = null;
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || ''
+const config = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.apiKey !== ''
-);
+if (!config.apiKey || !config.projectId) throw new Error('Firebase web configuration is required.');
+export const firebaseApp = initializeApp(config);
+export const auth = getAuth(firebaseApp);
+export const db = getFirestore(firebaseApp);
+export const functions = getFunctions(firebaseApp);
+export const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
 
-if (isFirebaseConfigured) {
-  try {
-    if (!getApps().length) {
-      app = initializeApp(firebaseConfig);
-    } else {
-      app = getApps()[0];
-    }
-    authInstance = getAuth(app);
-    firestoreInstance = getFirestore(app);
-  } catch (error) {
-    console.warn('Firebase initialization note: using local game engine mode.', error);
-  }
+if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
 }
 
-export const auth = authInstance;
-export const db = firestoreInstance;
-
-export async function initAnonymousAuth(): Promise<string | null> {
-  if (authInstance) {
-    try {
-      const userCred = await signInAnonymously(authInstance);
-      return userCred.user.uid;
-    } catch (e) {
-      console.warn('Anonymous sign-in fallback active:', e);
-    }
-  }
-  return null;
+const appCheckKey = import.meta.env.VITE_FIREBASE_APP_CHECK_SITE_KEY;
+if (appCheckKey) {
+  initializeAppCheck(firebaseApp, {
+    provider: new ReCaptchaEnterpriseProvider(appCheckKey),
+    isTokenAutoRefreshEnabled: true,
+  });
 }

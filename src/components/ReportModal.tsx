@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { sound } from '../services/soundService';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../services/firebase';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -12,18 +14,31 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, repor
   const [reason, setReason] = useState('Inappropriate Alias / Behavior');
   const [details, setDetails] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    sound.playActionSubmit();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setDetails('');
-      onClose();
-    }, 2000);
+    setError('');
+    try {
+      await httpsCallable(
+        functions,
+        'submitReport',
+      )({
+        category: reason,
+        content: details.trim() || `Report concerning ${reportedAlias ?? 'site content'}.`,
+      });
+      sound.playActionSubmit();
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setDetails('');
+        onClose();
+      }, 2000);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Report could not be submitted.');
+    }
   };
 
   return (
@@ -56,6 +71,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, repor
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <p role="alert" className="text-sm text-red-300">
+                {error}
+              </p>
+            )}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1">Reason</label>
               <select
@@ -71,7 +91,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, repor
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Additional Details (Optional)</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Additional Details (Optional)
+              </label>
               <textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}

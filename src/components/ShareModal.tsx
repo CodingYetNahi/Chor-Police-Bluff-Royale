@@ -10,13 +10,7 @@ interface ShareModalProps {
   shareUrl: string;
 }
 
-export const ShareModal: React.FC<ShareModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  shareText,
-  shareUrl
-}) => {
+export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title, shareText, shareUrl }) => {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -38,7 +32,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         await navigator.share({
           title: 'Chor Police: Bluff Royale',
           text: shareText,
-          url: shareUrl
+          url: shareUrl,
         });
       } catch {
         // user cancelled or share failed
@@ -48,9 +42,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     }
   };
 
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(
-    `${shareText}\n${shareUrl}`
-  )}`;
+  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
@@ -73,9 +65,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         </div>
 
         <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl mb-4">
-          <p className="text-xs text-slate-300 font-mono whitespace-pre-wrap break-all">
-            {shareText}
-          </p>
+          <p className="text-xs text-slate-300 font-mono whitespace-pre-wrap break-all">{shareText}</p>
           <p className="text-xs text-amber-400 font-mono mt-1 break-all">{shareUrl}</p>
         </div>
 

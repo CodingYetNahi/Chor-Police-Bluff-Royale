@@ -11,16 +11,14 @@ import {
   AlertTriangle,
   CheckCircle2,
   Sliders,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { alias, rerollAlias, updateAlias, settings, updateSettings } = useAuth();
 
   const [aliasInput, setAliasInput] = useState(alias);
-  const [aliasMessage, setAliasMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(
-    null
-  );
+  const [aliasMessage, setAliasMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleAliasSubmit = (e: React.FormEvent) => {
@@ -90,11 +88,7 @@ export const Settings: React.FC = () => {
           </div>
 
           {aliasMessage && (
-            <p
-              className={`text-xs ${
-                aliasMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'
-              }`}
-            >
+            <p className={`text-xs ${aliasMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
               {aliasMessage.text}
             </p>
           )}
@@ -195,7 +189,8 @@ export const Settings: React.FC = () => {
           Local Data & Storage
         </h2>
         <p className="text-xs text-slate-400 leading-relaxed">
-          Your anonymous session ID, sound preferences, and match stats are stored strictly inside your browser's local storage. Clearing storage resets all career statistics.
+          Your anonymous session ID, sound preferences, and match stats are stored strictly inside your
+          browser's local storage. Clearing storage resets all career statistics.
         </p>
 
         {showClearConfirm ? (

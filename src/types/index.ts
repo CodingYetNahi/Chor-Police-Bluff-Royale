@@ -7,6 +7,7 @@ export type GamePhase =
   | 'INVESTIGATION'
   | 'SPECIAL_ACTIONS'
   | 'FINAL_VOTING'
+  | 'TIE_BREAK'
   | 'REVEAL'
   | 'REMATCH';
 
@@ -156,6 +157,9 @@ export interface Room {
   caseData?: Case;
   currentPhase: GamePhase;
   phaseEndsAt: number;
+  phaseVersion: number;
+  round: number;
+  caseIndex: number;
   seats: Seat[];
   actionLogs: ActionLog[];
   specialActionResolutions: {

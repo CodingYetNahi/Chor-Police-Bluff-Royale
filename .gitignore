@@ -1,6 +1,8 @@
 node_modules/
 build/
 dist/
+public/generated/icon-192.png
+public/generated/icon-512.png
 coverage/
 .DS_Store
 *.log

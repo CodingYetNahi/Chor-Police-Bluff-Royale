@@ -56,7 +56,16 @@
         },
         "currentPhase": {
           "type": "string",
-          "enum": ["CASE_INTRO", "SECRET_ROLE", "EVIDENCE_REVIEW", "INVESTIGATION", "SPECIAL_ACTIONS", "FINAL_VOTING", "REVEAL", "REMATCH"],
+          "enum": [
+            "CASE_INTRO",
+            "SECRET_ROLE",
+            "EVIDENCE_REVIEW",
+            "INVESTIGATION",
+            "SPECIAL_ACTIONS",
+            "FINAL_VOTING",
+            "REVEAL",
+            "REMATCH"
+          ],
           "description": "Active game phase"
         },
         "phaseEndsAt": {

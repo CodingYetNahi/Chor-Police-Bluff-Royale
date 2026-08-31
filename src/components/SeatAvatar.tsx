@@ -10,7 +10,7 @@ import {
   MessageSquare,
   AlertTriangle,
   HelpCircle,
-  X
+  X,
 } from 'lucide-react';
 
 interface SeatAvatarProps {
@@ -38,7 +38,7 @@ export const SeatAvatar: React.FC<SeatAvatarProps> = ({
   recentActionText,
   recentActionType,
   recentEmoji,
-  votesCount
+  votesCount,
 }) => {
   const [showFullPopup, setShowFullPopup] = useState(false);
 
@@ -48,26 +48,26 @@ export const SeatAvatar: React.FC<SeatAvatarProps> = ({
         return {
           bg: 'bg-emerald-950 border-emerald-400 text-emerald-100 shadow-emerald-950/80',
           icon: <Shield className="w-3 h-3 text-emerald-400 flex-shrink-0" />,
-          label: 'Alibi Defense'
+          label: 'Alibi Defense',
         };
       case 'SUSPICION':
         return {
           bg: 'bg-red-950 border-red-400 text-red-100 shadow-red-950/80',
           icon: <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />,
-          label: 'Accusation'
+          label: 'Accusation',
         };
       case 'QUESTION':
         return {
           bg: 'bg-indigo-950 border-indigo-400 text-indigo-100 shadow-indigo-950/80',
           icon: <HelpCircle className="w-3 h-3 text-indigo-400 flex-shrink-0" />,
-          label: 'Question'
+          label: 'Question',
         };
       case 'STATEMENT':
       default:
         return {
           bg: 'bg-slate-900 border-amber-400 text-slate-100 shadow-slate-950/80',
           icon: <MessageSquare className="w-3 h-3 text-amber-400 flex-shrink-0" />,
-          label: 'Statement'
+          label: 'Statement',
         };
     }
   };
@@ -85,8 +85,8 @@ export const SeatAvatar: React.FC<SeatAvatarProps> = ({
         isSelectedForVote
           ? 'bg-amber-950/40 border-amber-500 ring-2 ring-amber-400/50 shadow-lg shadow-amber-950/50'
           : isCurrentUser
-          ? 'bg-indigo-950/30 border-indigo-500/40'
-          : 'bg-slate-900/80 border-slate-800'
+            ? 'bg-indigo-950/30 border-indigo-500/40'
+            : 'bg-slate-900/80 border-slate-800'
       }`}
     >
       {/* Speech / Reaction Bubble */}
@@ -132,8 +132,7 @@ export const SeatAvatar: React.FC<SeatAvatarProps> = ({
               </div>
 
               <p className="text-xs text-slate-100 font-medium leading-relaxed">
-                {recentEmoji && <span className="mr-1.5 text-sm">{recentEmoji}</span>}
-                "{recentActionText}"
+                {recentEmoji && <span className="mr-1.5 text-sm">{recentEmoji}</span>}"{recentActionText}"
               </p>
             </div>
           )}
@@ -173,8 +172,8 @@ export const SeatAvatar: React.FC<SeatAvatarProps> = ({
             isCurrentUser
               ? 'bg-indigo-900/60 border-indigo-400 text-indigo-200'
               : seat.isBot
-              ? 'bg-slate-800 border-slate-700 text-slate-300'
-              : 'bg-slate-800/80 border-slate-600 text-slate-100'
+                ? 'bg-slate-800 border-slate-700 text-slate-300'
+                : 'bg-slate-800/80 border-slate-600 text-slate-100'
           }`}
         >
           {seat.isBot ? (
@@ -193,12 +192,8 @@ export const SeatAvatar: React.FC<SeatAvatarProps> = ({
 
       {/* Alias */}
       <div className="w-full mt-1">
-        <p className="text-xs sm:text-sm font-semibold text-slate-100 truncate max-w-[130px]">
-          {seat.alias}
-        </p>
-        {isCurrentUser && (
-          <p className="text-[10px] text-indigo-400 font-medium">(You)</p>
-        )}
+        <p className="text-xs sm:text-sm font-semibold text-slate-100 truncate max-w-[130px]">{seat.alias}</p>
+        {isCurrentUser && <p className="text-[10px] text-indigo-400 font-medium">(You)</p>}
       </div>
 
       {/* Role Badge if revealed */}

@@ -13,7 +13,7 @@ export const PhaseTimer: React.FC<PhaseTimerProps> = ({
   phaseEndsAt,
   totalDurationMs = 15000,
   onTimerExpired,
-  label
+  label,
 }) => {
   const [timeLeftMs, setTimeLeftMs] = useState<number>(() => Math.max(0, phaseEndsAt - Date.now()));
 

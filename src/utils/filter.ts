@@ -14,7 +14,7 @@ const ADJECTIVES = [
   'Witty',
   'Brave',
   'Calm',
-  'Vigilant'
+  'Vigilant',
 ];
 
 const ANIMALS = [
@@ -33,7 +33,7 @@ const ANIMALS = [
   'Jaguar',
   'Lynx',
   'Falcon',
-  'Raven'
+  'Raven',
 ];
 
 const PROHIBITED_WORDS = [
@@ -48,7 +48,7 @@ const PROHIBITED_WORDS = [
   'stupid',
   'cheat',
   'hacker',
-  'bot'
+  'bot',
 ];
 
 export function generateRandomAlias(): string {

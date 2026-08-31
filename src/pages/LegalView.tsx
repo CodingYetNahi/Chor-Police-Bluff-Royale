@@ -31,7 +31,9 @@ export const LegalView: React.FC = () => {
         <Link
           to="/legal/privacy"
           className={`px-3 py-1.5 rounded-xl transition-colors ${
-            page === 'privacy' || !page ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+            page === 'privacy' || !page
+              ? 'bg-amber-500 text-slate-950 font-bold'
+              : 'text-slate-400 hover:text-white'
           }`}
         >
           Privacy Policy

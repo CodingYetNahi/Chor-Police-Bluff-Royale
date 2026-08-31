@@ -11,7 +11,7 @@ export const CasesArchive: React.FC = () => {
     (c) =>
       c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (c.summary || c.intro).toLowerCase().includes(searchTerm.toLowerCase())
+      (c.summary || c.intro).toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -53,9 +53,7 @@ export const CasesArchive: React.FC = () => {
               </div>
 
               <h2 className="text-base font-bold text-slate-100 leading-tight">{c.title}</h2>
-              <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                {c.summary || c.intro}
-              </p>
+              <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">{c.summary || c.intro}</p>
             </div>
 
             <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
@@ -98,12 +96,14 @@ export const CasesArchive: React.FC = () => {
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
                 <h3 className="text-xs font-bold uppercase text-amber-400">Incident Timeline</h3>
                 <div className="space-y-1.5 text-xs text-slate-300">
-                  {(selectedCase.timeline || [
-                    { time: '14:00', event: 'Event opens to guests' },
-                    { time: '14:15', event: 'Primary incident occurs' },
-                    { time: '14:20', event: 'Alarm raised by staff' },
-                    { time: '14:30', event: 'Area locked down for investigation' }
-                  ]).map((t, idx) => (
+                  {(
+                    selectedCase.timeline || [
+                      { time: '14:00', event: 'Event opens to guests' },
+                      { time: '14:15', event: 'Primary incident occurs' },
+                      { time: '14:20', event: 'Alarm raised by staff' },
+                      { time: '14:30', event: 'Area locked down for investigation' },
+                    ]
+                  ).map((t, idx) => (
                     <div key={idx} className="flex gap-2">
                       <span className="font-mono text-amber-400 font-bold">{t.time}</span>
                       <span>{t.event}</span>
@@ -115,10 +115,12 @@ export const CasesArchive: React.FC = () => {
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
                 <h3 className="text-xs font-bold uppercase text-amber-400">Stakes & Motive</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {selectedCase.stakes || 'High stakes forensic investigation with multiple conflicting alibis.'}
+                  {selectedCase.stakes ||
+                    'High stakes forensic investigation with multiple conflicting alibis.'}
                 </p>
                 <div className="pt-2 text-xs text-slate-400">
-                  <strong>Contradiction Anchor:</strong> Public timeline data directly clashes with false witness claims.
+                  <strong>Contradiction Anchor:</strong> Public timeline data directly clashes with false
+                  witness claims.
                 </div>
               </div>
             </div>
