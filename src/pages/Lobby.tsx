@@ -1,300 +1,175 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
-import { gameEngine } from '../services/gameEngine';
-import { sound } from '../services/soundService';
-import { Room, RoomPolicy } from '../types';
-import { SeatAvatar } from '../components/SeatAvatar';
-import { ShareModal } from '../components/ShareModal';
-import {
-  Users,
-  Share2,
-  Copy,
-  Check,
-  Crown,
-  Play,
-  CheckCircle2,
-  AlertCircle,
-  Bot,
-  Settings2,
-  LogOut
-} from 'lucide-react';
+import { multiplayer, subscribeToRoom, type RoomView } from '../services/roomService';
+import type { RoomPolicy } from '../types';
 
-export const Lobby: React.FC = () => {
-  const { roomId } = useParams<{ roomId: string }>();
-  const navigate = useNavigate();
+export function Lobby() {
+  const { roomId = '' } = useParams();
   const { uid, alias } = useAuth();
+  const navigate = useNavigate();
+  const [room, setRoom] = useState<RoomView | null>(null);
+  const [error, setError] = useState('');
+  const [now, setNow] = useState(Date.now());
 
-  const [room, setRoom] = useState<Room | null>(() => (roomId ? gameEngine.getRoom(roomId) : null));
-  const [copiedCode, setCopiedCode] = useState(false);
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  // Sync state & check if match started
+  useEffect(() => subscribeToRoom(roomId, uid, setRoom, (reason) => setError(reason.message)), [roomId, uid]);
   useEffect(() => {
-    if (!roomId) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    if (room?.status === 'IN_GAME' || room?.status === 'FINISHED')
+      navigate(`/match/${room.id}`, { replace: true });
+  }, [navigate, room]);
 
-    const interval = setInterval(() => {
-      const current = gameEngine.getRoom(roomId);
-      if (current) {
-        setRoom({ ...current });
-        if (current.status === 'IN_GAME') {
-          navigate(`/match/${roomId}`);
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [roomId, navigate]);
-
-  if (!room) {
-    return (
-      <div className="max-w-md mx-auto my-16 p-8 bg-slate-900 border border-slate-800 rounded-3xl text-center space-y-4">
-        <AlertCircle className="w-12 h-12 text-amber-400 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-100">Room Not Found</h2>
-        <p className="text-sm text-slate-400">The room session has ended or expired.</p>
-        <button
-          onClick={() => navigate('/')}
-          className="py-2.5 px-6 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm"
-        >
-          Return to Home
-        </button>
-      </div>
-    );
+  const me = room?.members.find((member) => member.uid === uid);
+  const isHost = room?.hostUid === uid;
+  const deadline = useMemo(
+    () => (room?.isPrivate ? room.botFillAt?.toMillis() : room?.humanDeadline?.toMillis()),
+    [room],
+  );
+  const waitSeconds = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : 0;
+  useEffect(() => {
+    if (!room || room.status !== 'LOBBY' || waitSeconds !== 0 || room.policy === 'HUMANS_ONLY') return;
+    if (room.isPrivate && !isHost) return;
+    void multiplayer
+      .fillBots(room.id)
+      .catch((reason) =>
+        setError(reason instanceof Error ? reason.message : 'Automatic seat filling failed.'),
+      );
+  }, [isHost, room, waitSeconds]);
+  async function invoke(action: () => Promise<unknown>) {
+    setError('');
+    try {
+      await action();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Request failed.');
+    }
   }
 
-  const isHost = room.hostUid === uid;
-  const currentSeat = room.seats.find((s) => s.uid === uid);
-
-  const handleToggleReady = () => {
-    sound.playActionSubmit();
-    if (currentSeat) {
-      currentSeat.isReady = !currentSeat.isReady;
-      setRoom({ ...room });
-    }
-  };
-
-  const handlePolicyChange = (policy: RoomPolicy) => {
-    sound.playActionSubmit();
-    gameEngine.updateRoomPolicy(room.id, uid, policy);
-    setRoom({ ...room, policy });
-  };
-
-  const handleStartMatch = () => {
-    sound.playActionSubmit();
-    const res = gameEngine.startMatch(room.id, true);
-    if (res.success && res.room) {
-      setRoom({ ...res.room });
-      navigate(`/match/${room.id}`);
-    } else {
-      setErrorMsg(res.error || 'Failed to start match.');
-    }
-  };
-
-  const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(room.code);
-      setCopiedCode(true);
-      sound.playActionSubmit();
-      setTimeout(() => setCopiedCode(false), 2000);
-    } catch {
-      // fallback
-    }
-  };
-
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/?join=${room.code}` : '';
-  const shareText = `Join my Chor Police: Bluff Royale match! Room code: ${room.code}`;
-
+  if (!room)
+    return (
+      <main role="status" className="grid flex-1 place-items-center">
+        Restoring your room…
+      </main>
+    );
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6 animate-fade-in">
-      {/* Lobby Header Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              {room.isPrivate ? 'Private Room Lobby' : 'Public Lobby'}
-            </span>
-            {isHost && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                <Crown className="w-3 h-3" />
-                Host
-              </span>
-            )}
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-100">
-            6-Player Deduction Lobby
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Seats fill with connected players. Unoccupied seats can be filled with labeled rule-based BOTs.
-          </p>
+    <main className="mx-auto w-full max-w-4xl p-6">
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-sm uppercase tracking-widest text-amber-400">Room code</p>
+          <h1 className="font-mono text-4xl font-black tracking-[0.2em]">{room.code}</h1>
         </div>
-
-        {/* Room Code Card */}
-        {room.isPrivate && (
-          <div className="flex items-center gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-3 sm:p-4">
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Room Code</p>
-              <p className="text-2xl sm:text-3xl font-mono font-black text-amber-400 tracking-widest">
-                {room.code}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <button
-                onClick={handleCopyCode}
-                title="Copy Room Code"
-                className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-all flex items-center gap-1 text-xs"
-              >
-                {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              </button>
-
-              <button
-                onClick={() => setShareModalOpen(true)}
-                title="Share Room Invite"
-                className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 text-xs"
-              >
-                <Share2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Seats Grid */}
-      <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-bold text-slate-100">Roster Table (6 Seats)</h2>
-          </div>
-          <span className="text-xs font-mono text-slate-400">
-            {room.seats.filter((s) => s.uid).length} / 6 Seated
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {room.seats.map((seat) => (
-            <SeatAvatar
-              key={seat.seatIndex}
-              seat={seat}
-              isCurrentUser={seat.uid === uid}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Host Controls & Policies */}
-      {isHost && (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-          <div className="flex items-center gap-2">
-            <Settings2 className="w-5 h-5 text-amber-400" />
-            <h3 className="text-base font-bold text-slate-100">Host Seat Filling Policy</h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button
-              onClick={() => handlePolicyChange('FILL_WITH_BOTS')}
-              className={`p-4 rounded-2xl border text-left transition-all ${
-                room.policy === 'FILL_WITH_BOTS'
-                  ? 'bg-amber-500/10 border-amber-500 ring-1 ring-amber-500/50 text-amber-300'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-              }`}
-            >
-              <div className="flex items-center gap-2 font-bold text-sm text-slate-100 mb-1">
-                <Bot className="w-4 h-4 text-amber-400" />
-                Fill With Bots
-              </div>
-              <p className="text-xs text-slate-400">
-                Immediately fills vacant seats with disclosed rule-based BOTs when you start.
-              </p>
-            </button>
-
-            <button
-              onClick={() => handlePolicyChange('HUMANS_ONLY')}
-              className={`p-4 rounded-2xl border text-left transition-all ${
-                room.policy === 'HUMANS_ONLY'
-                  ? 'bg-amber-500/10 border-amber-500 ring-1 ring-amber-500/50 text-amber-300'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-              }`}
-            >
-              <div className="flex items-center gap-2 font-bold text-sm text-slate-100 mb-1">
-                <Users className="w-4 h-4 text-indigo-400" />
-                Humans Only
-              </div>
-              <p className="text-xs text-slate-400">
-                Requires all 6 seats to be taken by real human players before launching.
-              </p>
-            </button>
-
-            <button
-              onClick={() => handlePolicyChange('OPEN_REMAINING_SEATS')}
-              className={`p-4 rounded-2xl border text-left transition-all ${
-                room.policy === 'OPEN_REMAINING_SEATS'
-                  ? 'bg-amber-500/10 border-amber-500 ring-1 ring-amber-500/50 text-amber-300'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-              }`}
-            >
-              <div className="flex items-center gap-2 font-bold text-sm text-slate-100 mb-1">
-                <Crown className="w-4 h-4 text-emerald-400" />
-                Open Remaining
-              </div>
-              <p className="text-xs text-slate-400">
-                Gives invited friends priority, then opens remaining slots to public matchmaking.
-              </p>
-            </button>
-          </div>
-        </div>
+        <p aria-live="polite">{room.occupancy} of 6 seats occupied</p>
+      </header>
+      {error && (
+        <p role="alert" className="mt-4 rounded border border-red-500 p-3 text-red-200">
+          {error}
+        </p>
       )}
-
-      {errorMsg && (
-        <div className="p-4 bg-red-950/40 border border-red-500/40 rounded-2xl text-red-300 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
-
-      {/* Action Footer Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-        <button
-          onClick={() => navigate('/')}
-          className="w-full sm:w-auto py-3 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-semibold flex items-center justify-center gap-2 transition-all"
-        >
-          <LogOut className="w-4 h-4" />
-          Leave Lobby
-        </button>
-
-        <div className="w-full sm:w-auto flex items-center gap-3">
-          <button
-            onClick={handleToggleReady}
-            className={`w-full sm:w-auto py-3.5 px-6 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border transition-all ${
-              currentSeat?.isReady
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-950/40'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            {currentSeat?.isReady ? 'Ready for Match' : 'Set Ready'}
-          </button>
-
-          {isHost && (
-            <button
-              onClick={handleStartMatch}
-              className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl shadow-amber-950/60 transition-all"
-            >
-              <Play className="w-5 h-5 fill-slate-950" />
-              Launch Match Now
-            </button>
+      <ol className="mt-8 grid gap-3 sm:grid-cols-2">
+        {Array.from({ length: 6 }, (_, seat) => {
+          const member = room.members.find((candidate) => candidate.seatIndex === seat);
+          return (
+            <li key={seat} className="rounded-xl border border-slate-700 bg-slate-900 p-4">
+              <span className="mr-3 text-slate-500">Seat {seat + 1}</span>
+              {member ? (
+                <>
+                  <strong>{member.alias}</strong>
+                  {member.isBot && <span className="ml-2 rounded bg-sky-800 px-2 text-xs">BOT</span>}
+                  <span className="ml-2 text-xs">{member.isReady ? 'READY' : 'NOT READY'}</span>
+                </>
+              ) : (
+                <span className="text-slate-500">Waiting…</span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {isHost && room.isPrivate && (
+        <fieldset className="mt-8">
+          <legend className="font-bold">Room policy</legend>
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
+            {(['HUMANS_ONLY', 'FILL_WITH_BOTS', 'OPEN_REMAINING_SEATS'] as RoomPolicy[]).map((policy) => (
+              <label key={policy} className="rounded border border-slate-700 p-3">
+                <input
+                  type="radio"
+                  name="policy"
+                  checked={room.policy === policy}
+                  onChange={() => invoke(() => multiplayer.policy(room.id, policy))}
+                />{' '}
+                <span>{policy.replaceAll('_', ' ')}</span>
+              </label>
+            ))}
+          </div>
+          {room.policy === 'OPEN_REMAINING_SEATS' && (
+            <p className="mt-2 text-amber-300">
+              Invitees have 30 seconds of priority. Public players may then take open seats for 20 seconds
+              before bots fill them.
+            </p>
           )}
-        </div>
+        </fieldset>
+      )}
+      <div className="mt-8 flex flex-wrap gap-3">
+        <button
+          onClick={() => invoke(() => multiplayer.ready(room.id, !me?.isReady))}
+          className="rounded bg-sky-500 px-5 py-3 font-bold text-slate-950"
+        >
+          {me?.isReady ? 'Not ready' : 'Ready'}
+        </button>
+        {isHost && (
+          <button
+            onClick={() => invoke(() => multiplayer.start(room.id))}
+            className="rounded bg-amber-500 px-5 py-3 font-bold text-slate-950"
+          >
+            Start match
+          </button>
+        )}
+        {waitSeconds === 0 && room.policy !== 'HUMANS_ONLY' && (
+          <button
+            onClick={() => invoke(() => multiplayer.fillBots(room.id))}
+            className="rounded border px-5 py-3"
+          >
+            Continue with bots
+          </button>
+        )}
+        <button
+          onClick={() => setError('You remain in this room. Your seat is reserved.')}
+          className="rounded border px-5 py-3"
+        >
+          Keep waiting
+        </button>
+        {room.isPrivate && (
+          <button
+            onClick={() =>
+              invoke(async () => {
+                await multiplayer.leave(room.id);
+                const result = await multiplayer.quickMatch(alias);
+                navigate(`/lobby/${result.data.roomId}`, { replace: true });
+              })
+            }
+            className="rounded border px-5 py-3"
+          >
+            Join public match
+          </button>
+        )}
+        <button
+          onClick={() =>
+            invoke(async () => {
+              await multiplayer.leave(room.id);
+              navigate('/');
+            })
+          }
+          className="rounded border border-red-500 px-5 py-3 text-red-200"
+        >
+          Leave room
+        </button>
       </div>
-
-      <ShareModal
-        isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-        title="Invite Players to Lobby"
-        shareText={shareText}
-        shareUrl={shareUrl}
-      />
-    </div>
+      {waitSeconds > 0 && (
+        <p aria-live="polite" className="mt-4 text-slate-300">
+          Human joining window: {waitSeconds}s remaining
+        </p>
+      )}
+    </main>
   );
-};
+}

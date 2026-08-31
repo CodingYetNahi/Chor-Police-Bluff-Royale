@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -11,15 +11,23 @@ import { CasesArchive } from './pages/CasesArchive';
 import { Stats } from './pages/Stats';
 import { Settings } from './pages/Settings';
 import { LegalView } from './pages/LegalView';
+import { JoinRoom } from './pages/JoinRoom';
+import { NotFound } from './pages/NotFound';
+import { Admin } from './pages/Admin';
 
 export function App() {
   useEffect(() => {
     // Register Service Worker for PWA offline caching if supported
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {
-          // Ignore worker registration errors
-        });
+        navigator.serviceWorker
+          .register('/sw.js')
+          .then((registration) =>
+            registration.addEventListener('updatefound', () =>
+              document.dispatchEvent(new Event('service-worker-update')),
+            ),
+          )
+          .catch(() => undefined);
       });
     }
   }, []);
@@ -39,7 +47,9 @@ export function App() {
               <Route path="/stats" element={<Stats />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/legal/:page" element={<LegalView />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/join" element={<JoinRoom />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
           <Footer />

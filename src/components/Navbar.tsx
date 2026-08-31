@@ -13,10 +13,8 @@ import {
   BookOpen,
   Trophy,
   Settings as SettingsIcon,
-  Crown,
-  FileQuestion
+  FileQuestion,
 } from 'lucide-react';
-import { paymentService } from '../services/paymentService';
 
 export const Navbar: React.FC = () => {
   const { alias, rerollAlias, updateAlias, uid, settings, updateSettings, stats } = useAuth();
@@ -24,8 +22,6 @@ export const Navbar: React.FC = () => {
   const [isEditingAlias, setIsEditingAlias] = useState(false);
   const [newAliasInput, setNewAliasInput] = useState(alias);
   const [aliasError, setAliasError] = useState('');
-
-  const activeEntitlement = paymentService.getActiveEntitlement(uid);
 
   const toggleSound = () => {
     const newVal = !settings.masterSound;
@@ -77,7 +73,9 @@ export const Navbar: React.FC = () => {
           <Link
             to="/"
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              location.pathname === '/' ? 'bg-slate-800 text-amber-400' : 'text-slate-300 hover:text-white hover:bg-slate-900'
+              location.pathname === '/'
+                ? 'bg-slate-800 text-amber-400'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900'
             }`}
           >
             Play Match
@@ -85,7 +83,9 @@ export const Navbar: React.FC = () => {
           <Link
             to="/how-to-play"
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-              location.pathname === '/how-to-play' ? 'bg-slate-800 text-amber-400' : 'text-slate-300 hover:text-white hover:bg-slate-900'
+              location.pathname === '/how-to-play'
+                ? 'bg-slate-800 text-amber-400'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900'
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
@@ -94,7 +94,9 @@ export const Navbar: React.FC = () => {
           <Link
             to="/cases"
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-              location.pathname === '/cases' ? 'bg-slate-800 text-amber-400' : 'text-slate-300 hover:text-white hover:bg-slate-900'
+              location.pathname === '/cases'
+                ? 'bg-slate-800 text-amber-400'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900'
             }`}
           >
             <FileQuestion className="w-3.5 h-3.5" />
@@ -103,7 +105,9 @@ export const Navbar: React.FC = () => {
           <Link
             to="/stats"
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-              location.pathname === '/stats' ? 'bg-slate-800 text-amber-400' : 'text-slate-300 hover:text-white hover:bg-slate-900'
+              location.pathname === '/stats'
+                ? 'bg-slate-800 text-amber-400'
+                : 'text-slate-300 hover:text-white hover:bg-slate-900'
             }`}
           >
             <Trophy className="w-3.5 h-3.5" />
@@ -113,17 +117,11 @@ export const Navbar: React.FC = () => {
 
         {/* Right Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Active Pass Badge if any */}
-          {activeEntitlement && (
-            <div className="hidden lg:flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30">
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <span>Host Pass Active</span>
-            </div>
-          )}
-
           {/* Alias Chip */}
           <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-200">
-            <span className="font-semibold text-slate-100 max-w-[90px] sm:max-w-[120px] truncate">{alias}</span>
+            <span className="font-semibold text-slate-100 max-w-[90px] sm:max-w-[120px] truncate">
+              {alias}
+            </span>
             <button
               onClick={() => {
                 setNewAliasInput(alias);
@@ -169,7 +167,11 @@ export const Navbar: React.FC = () => {
                 : 'bg-slate-900/50 text-slate-500 border-slate-800'
             }`}
           >
-            {settings.vibrationEnabled ? <Vibrate className="w-4 h-4 text-amber-400" /> : <SmartphoneNfc className="w-4 h-4" />}
+            {settings.vibrationEnabled ? (
+              <Vibrate className="w-4 h-4 text-amber-400" />
+            ) : (
+              <SmartphoneNfc className="w-4 h-4" />
+            )}
           </button>
 
           <Link

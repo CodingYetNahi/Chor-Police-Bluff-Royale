@@ -1,18 +1,25 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { PlayerStats, Role, UserSettings } from '../../types';
 import { generateRandomAlias, validateAlias } from '../../utils/filter';
 import { sound } from '../../services/soundService';
+import { auth, authPersistenceReady, db, functions } from '../../services/firebase';
 
 interface AuthContextType {
   uid: string;
   alias: string;
   isAnonymous: boolean;
+  loading: boolean;
+  error: string | null;
   stats: PlayerStats;
   settings: UserSettings;
+  isAdmin: boolean;
   rerollAlias: () => void;
-  updateAlias: (newAlias: string) => { success: boolean; error?: string };
-  updateSettings: (newSettings: Partial<UserSettings>) => void;
-  recordMatchResult: (matchData: {
+  updateAlias: (value: string) => { success: boolean; error?: string };
+  updateSettings: (settings: Partial<UserSettings>) => void;
+  recordMatchResult: (data: {
     matchId: string;
     caseTitle: string;
     role: Role;
@@ -22,161 +29,115 @@ interface AuthContextType {
     didEscapeAsChor?: boolean;
   }) => void;
 }
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const emptyStats: PlayerStats = {
+  matchesPlayed: 0,
+  wins: 0,
+  correctAccusations: 0,
+  chorEscapes: 0,
+  bestRole: 'POLICE',
+  currentScore: 0,
+  rankTier: 'Trainee Observer',
+  recentMatches: [],
+};
 
-const UID_STORAGE_KEY = 'cp_player_uid';
-const ALIAS_STORAGE_KEY = 'cp_player_alias';
-const STATS_STORAGE_KEY = 'cp_player_stats';
-
-function calculateRankTier(score: number): string {
-  if (score >= 2000) return 'Chief Inspector';
-  if (score >= 1200) return 'Senior Detective';
-  if (score >= 600) return 'Junior Sleuth';
-  if (score >= 200) return 'Rookie Investigator';
-  return 'Trainee Observer';
-}
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [uid, setUid] = useState<string>('');
-  const [alias, setAlias] = useState<string>('Silent Tiger');
-  const [settings, setSettingsState] = useState<UserSettings>(() => sound.getSettings());
-  const [stats, setStats] = useState<PlayerStats>({
-    matchesPlayed: 0,
-    wins: 0,
-    correctAccusations: 0,
-    chorEscapes: 0,
-    bestRole: 'POLICE',
-    currentScore: 0,
-    rankTier: 'Trainee Observer',
-    recentMatches: []
-  });
-
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [uid, setUid] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setAdmin] = useState(false);
+  const [stats, setStats] = useState(emptyStats);
+  const [alias, setAlias] = useState(() => localStorage.getItem('cp_player_alias') || generateRandomAlias());
+  const [settings, setSettings] = useState<UserSettings>(() => sound.getSettings());
   useEffect(() => {
-    // 1. Initialize or restore persistent UID
-    let storedUid = localStorage.getItem(UID_STORAGE_KEY);
-    if (!storedUid) {
-      storedUid = `cp_anon_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      localStorage.setItem(UID_STORAGE_KEY, storedUid);
-    }
-    setUid(storedUid);
-
-    // 2. Initialize or restore Alias
-    let storedAlias = localStorage.getItem(ALIAS_STORAGE_KEY);
-    if (!storedAlias) {
-      storedAlias = generateRandomAlias();
-      localStorage.setItem(ALIAS_STORAGE_KEY, storedAlias);
-    }
-    setAlias(storedAlias);
-
-    // 3. Initialize or restore Lifetime Statistics
-    try {
-      const storedStats = localStorage.getItem(STATS_STORAGE_KEY);
-      if (storedStats) {
-        setStats(JSON.parse(storedStats));
-      }
-    } catch {
-      // ignore
-    }
+    localStorage.setItem('cp_player_alias', alias);
+    let unsubscribeProfile = () => {};
+    authPersistenceReady
+      .then(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          try {
+            const account = user ?? (await signInAnonymously(auth)).user;
+            setUid(account.uid);
+            setAdmin((await account.getIdTokenResult()).claims.admin === true);
+            await httpsCallable(functions, 'initializePlayer')({ alias });
+            unsubscribeProfile();
+            unsubscribeProfile = onSnapshot(doc(db, 'players', account.uid), (snap) => {
+              const remote = snap.data()?.stats as Partial<PlayerStats> | undefined;
+              if (remote) setStats({ ...emptyStats, ...remote });
+            });
+            setLoading(false);
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Anonymous authentication failed.');
+            setLoading(false);
+          }
+        });
+        return unsubscribe;
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : 'Authentication persistence failed.');
+        setLoading(false);
+      });
+    return () => unsubscribeProfile();
   }, []);
-
-  const rerollAlias = () => {
-    const fresh = generateRandomAlias();
-    setAlias(fresh);
-    localStorage.setItem(ALIAS_STORAGE_KEY, fresh);
-    sound.saveSettings({ alias: fresh });
-  };
-
-  const updateAlias = (newAlias: string): { success: boolean; error?: string } => {
-    const validation = validateAlias(newAlias);
-    if (!validation.isValid) {
-      return { success: false, error: validation.error };
-    }
-    const clean = validation.sanitized!;
+  const updateAlias = (value: string) => {
+    const valid = validateAlias(value);
+    if (!valid.isValid) return { success: false, error: valid.error };
+    const clean = valid.sanitized!;
     setAlias(clean);
-    localStorage.setItem(ALIAS_STORAGE_KEY, clean);
-    sound.saveSettings({ alias: clean });
+    localStorage.setItem('cp_player_alias', clean);
+    void httpsCallable(functions, 'initializePlayer')({ alias: clean });
     return { success: true };
   };
-
-  const updateSettings = (newSettings: Partial<UserSettings>) => {
-    const saved = sound.saveSettings(newSettings);
-    setSettingsState(saved);
+  const rerollAlias = () => {
+    updateAlias(generateRandomAlias());
   };
-
-  const recordMatchResult = (matchData: {
-    matchId: string;
-    caseTitle: string;
-    role: Role;
-    result: 'WIN' | 'LOSS';
-    points: number;
-    didAccuseChor?: boolean;
-    didEscapeAsChor?: boolean;
-  }) => {
-    setStats((prev) => {
-      const newPlayed = prev.matchesPlayed + 1;
-      const newWins = prev.wins + (matchData.result === 'WIN' ? 1 : 0);
-      const newAccusations = prev.correctAccusations + (matchData.didAccuseChor ? 1 : 0);
-      const newEscapes = prev.chorEscapes + (matchData.didEscapeAsChor ? 1 : 0);
-      const newScore = Math.max(0, prev.currentScore + matchData.points);
-      const newTier = calculateRankTier(newScore);
-
-      const newRecent = [
-        {
-          matchId: matchData.matchId,
-          caseTitle: matchData.caseTitle,
-          role: matchData.role,
-          result: matchData.result,
-          points: matchData.points,
-          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-        },
-        ...prev.recentMatches
-      ].slice(0, 5);
-
-      const updated: PlayerStats = {
-        matchesPlayed: newPlayed,
-        wins: newWins,
-        correctAccusations: newAccusations,
-        chorEscapes: newEscapes,
-        bestRole: matchData.result === 'WIN' ? matchData.role : prev.bestRole,
-        currentScore: newScore,
-        rankTier: newTier,
-        recentMatches: newRecent
-      };
-
-      try {
-        localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(updated));
-      } catch {
-        // ignore
-      }
-
-      return updated;
-    });
+  const updateSettings = (value: Partial<UserSettings>) => setSettings(sound.saveSettings(value));
+  const recordMatchResult = () => {
+    /* Statistics are written only by match resolution on the server. */
   };
-
   return (
     <AuthContext.Provider
       value={{
         uid,
         alias,
         isAnonymous: true,
+        loading,
+        error,
         stats,
         settings,
+        isAdmin,
         rerollAlias,
         updateAlias,
         updateSettings,
-        recordMatchResult
+        recordMatchResult,
       }}
     >
-      {children}
+      {loading ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="min-h-screen grid place-items-center bg-slate-950 text-amber-400"
+        >
+          Securing your anonymous session…
+        </div>
+      ) : error ? (
+        <div role="alert" className="min-h-screen grid place-items-center bg-slate-950 text-red-300">
+          <div>
+            <h1 className="text-xl font-bold">Unable to sign in</h1>
+            <p>{error}</p>
+            <button className="mt-4 underline" onClick={() => location.reload()}>
+              Try again
+            </button>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+}
+export function useAuth() {
+  const value = useContext(AuthContext);
+  if (!value) throw new Error('useAuth must be used within AuthProvider');
+  return value;
+}
